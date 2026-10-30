@@ -304,6 +304,31 @@ export default function App() {
     showToast('Record deleted.');
   };
 
+// Delete a patient profile (and their check-ins)
+  const handleDeletePatient = async (id: string) => {
+    if (!window.confirm('Delete this patient and all their check-ins? This cannot be undone.')) return;
+
+    const remainingPatients = patients.filter((p) => p.id !== id);
+    const recordsToDelete = historyRecords.filter((r) => r.patientId === id);
+
+    setPatients(remainingPatients);
+    setHistoryRecords((prev) => prev.filter((r) => r.patientId !== id));
+
+    if (currentPatientId === id) {
+      setCurrentPatientId(remainingPatients.length > 0 ? remainingPatients[0].id : '');
+    }
+
+    if (user) {
+      try {
+        await deletePatientFromFirestore(user.uid, id);
+        await Promise.all(recordsToDelete.map((r) => deleteRecordFromFirestore(user.uid, r.id)));
+      } catch (err) {
+        console.error('Firestore delete patient error:', err);
+      }
+    }
+    showToast('Patient deleted.');
+  };
+
   // Filter history records for current patient
   const patientHistoryRecords = historyRecords.filter(
     (r) => r.patientId === currentPatient?.id
@@ -347,6 +372,7 @@ export default function App() {
         isAuthLoading={isAuthLoading}
         onLogin={handleOpenAuthModal}
         onLogout={handleLogout}
+        onDeletePatient={handleDeletePatient}
       />
 
       {/* Toast Notification */}

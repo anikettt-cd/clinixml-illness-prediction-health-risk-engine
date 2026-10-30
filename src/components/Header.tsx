@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { HeartPulse, UserPlus, LogOut, CheckCircle2 } from 'lucide-react';
+import { HeartPulse, UserPlus, LogOut, CheckCircle2, Trash2 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { PatientProfile, AppUser } from '../types/medical';
 
@@ -21,6 +21,7 @@ interface HeaderProps {
   isAuthLoading: boolean;
   onLogin: () => void;
   onLogout: () => void;
+  onDeletePatient?: (id: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   isAuthLoading,
   onLogin,
   onLogout,
+  onDeletePatient,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs">
@@ -95,6 +97,15 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Zone 3: Patient Switcher & Auth Section */}
         <div className="flex items-center gap-2 shrink-0">
+          {patients.length > 0 && onDeletePatient && (
+            <button
+              onClick={() => onDeletePatient(currentPatientId)}
+              title="Delete current patient"
+              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
           {patients.length > 1 && (
             <div className="relative hidden lg:flex items-center">
               <select
