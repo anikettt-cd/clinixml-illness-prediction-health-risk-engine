@@ -5,7 +5,7 @@
  * and predicts disease probabilities in clear plain English.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Search,
   Plus,
@@ -35,6 +35,8 @@ export const SimpleHealthCheck: React.FC<SimpleHealthCheckProps> = ({
   onEditPatient,
   onSaveCheckIn,
 }) => {
+  const [copied, setCopied] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Selected symptoms with their duration & severity
@@ -150,6 +152,27 @@ export const SimpleHealthCheck: React.FC<SimpleHealthCheckProps> = ({
     setSelectedSymptoms(next);
   };
 
+// Copy report to clipboard
+  const handleCopyReport = async () => {
+    const text = [
+      'Symptom Check Report',
+      `Patient: ${patient.name} (Age ${patient.age}, BMI ${patient.bmi.toFixed(1)})`,
+      '',
+      'Reported Symptoms:',
+      ...Object.values(selectedSymptoms).map((s) => `- ${s.name} (${s.durationLabel}, ${s.severityLabel})`),
+      '',
+      'Top Predictions:',
+      ...diseaseProbabilities.slice(0, 5).map((d) => `- ${d.diseaseName}: ${d.probability}% (${d.riskLevel})`),
+    ].join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.alert('Copy failed. Please copy manually.');
+    }
+  };
+
   // Clear all symptoms
   const handleClearAll = () => {
     setSelectedSymptoms({});
@@ -168,6 +191,17 @@ export const SimpleHealthCheck: React.FC<SimpleHealthCheckProps> = ({
       );
     });
   }, [searchQuery, selectedSymptoms]);
+
+useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '/' && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const selectedCount = Object.keys(selectedSymptoms).length;
   const topPrediction = diseaseProbabilities[0];
@@ -270,8 +304,9 @@ export const SimpleHealthCheck: React.FC<SimpleHealthCheckProps> = ({
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="Search any other symptom (e.g. sore throat, chills, nausea, blurry vision)..."
+              placeholder="Search any other symptom (e.g. sore throat, chills, nausea, blurry vision)... (press / to focus)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
@@ -626,6 +661,12 @@ export const SimpleHealthCheck: React.FC<SimpleHealthCheckProps> = ({
 
         {/* Action Buttons */}
         <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-2">
+          <button
+            onClick={handleCopyReport}
+            className="w-full sm:w-auto px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2"
+          >
+            <span>{copied ? '✅ Copied!' : '📋 Copy Report'}</span>
+          </button>
           <button
             onClick={() => window.print()}
             className="w-full sm:w-auto px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2"

@@ -18,6 +18,16 @@ export const SimpleHistoryList: React.FC<SimpleHistoryListProps> = ({
   onDeleteRecord,
   onStartNewCheckIn,
 }) => {
+  const handleExport = () => {
+    const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'health-check-history.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -30,12 +40,20 @@ export const SimpleHistoryList: React.FC<SimpleHistoryListProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onStartNewCheckIn}
-          className="px-4 py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-xl transition-all shadow-xs shrink-0 self-start sm:self-auto"
-        >
-          + Check Symptoms Now
-        </button>
+<div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition-all shadow-xs"
+          >
+            ⬇️ Export Data
+          </button>
+          <button
+            onClick={onStartNewCheckIn}
+            className="px-4 py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-xl transition-all shadow-xs shrink-0 self-start sm:self-auto"
+          >
+            + Check Symptoms Now
+          </button>
+        </div>
       </div>
 
       {records.length === 0 ? (

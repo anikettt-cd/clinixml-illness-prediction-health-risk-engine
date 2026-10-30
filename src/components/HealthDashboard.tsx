@@ -19,6 +19,9 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ patient, recor
   const bmiCat = getBmiCategory(patient.bmi);
   const riskFactorCount = [patient.isSmoker, patient.hasDiabetesHistory, patient.hasHeartHistory, patient.hasHighBpHistory].filter(Boolean).length;
   const latest = records[0];
+  const daysSinceLast = latest
+    ? Math.max(0, Math.floor((Date.now() - new Date(latest.timestamp).getTime()) / 86400000))
+    : null;
   const trend = useMemo(() => records.slice(0, 6).reverse(), [records]);
   const wellnessScore = useMemo(() => {
     let score = 100;
@@ -34,8 +37,13 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ patient, recor
       <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {patient.name}</h2>
+<h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {patient.name}</h2>
             <p className="text-xs sm:text-sm text-slate-600 mt-1">Quick snapshot of your health profile and recent activity.</p>
+            {daysSinceLast !== null && (
+              <span className="inline-block mt-2 px-2.5 py-1 text-[10px] font-semibold text-sky-700 bg-sky-50 border border-sky-200 rounded-full">
+                Last check-in {daysSinceLast === 0 ? 'today' : `${daysSinceLast} day${daysSinceLast === 1 ? '' : 's'} ago`}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
