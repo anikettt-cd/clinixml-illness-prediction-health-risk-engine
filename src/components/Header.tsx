@@ -10,8 +10,8 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { PatientProfile, AppUser } from '../types/medical';
 
 interface HeaderProps {
-  activeTab: 'check_symptoms' | 'history';
-  setActiveTab: (tab: 'check_symptoms' | 'history') => void;
+  activeTab: 'dashboard' | 'check_symptoms' | 'history';
+  setActiveTab: (tab: 'dashboard' | 'check_symptoms' | 'history') => void;
   patients: PatientProfile[];
   currentPatientId: string;
   onSelectPatient: (id: string) => void;
@@ -60,6 +60,16 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Zone 2: Navigation Links */}
         {patients.length > 0 && (
           <nav className="hidden md:flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all ${
+                activeTab === 'dashboard'
+                  ? 'bg-white text-sky-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Dashboard
+            </button>
             <button
               onClick={() => setActiveTab('check_symptoms')}
               className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all ${

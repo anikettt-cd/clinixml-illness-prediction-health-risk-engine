@@ -131,6 +131,25 @@ export const SimpleHealthCheck: React.FC<SimpleHealthCheckProps> = ({
     });
   };
 
+  // Quick symptom presets
+  const applyPreset = (ids: string[]) => {
+    const next: Record<string, ReportedSymptom> = {};
+    ids.forEach((id) => {
+      const sym = CLINICAL_SYMPTOMS_GRAPH[id];
+      if (sym) {
+        next[id] = {
+          symptomId: id,
+          name: sym.name,
+          duration: '2_3_days',
+          durationLabel: '2 to 3 days',
+          severity: 'moderate',
+          severityLabel: 'Moderate',
+        };
+      }
+    });
+    setSelectedSymptoms(next);
+  };
+
   // Clear all symptoms
   const handleClearAll = () => {
     setSelectedSymptoms({});
@@ -235,6 +254,15 @@ export const SimpleHealthCheck: React.FC<SimpleHealthCheckProps> = ({
               </button>
             );
           })}
+        </div>
+
+{/* Quick Presets */}
+        <div className="flex flex-wrap gap-2 pt-2">
+          <span className="text-[11px] font-semibold text-slate-500 self-center">Quick presets:</span>
+          <button onClick={() => applyPreset(['fever', 'headache', 'body_aches', 'fatigue'])} className="px-3 py-1.5 text-[11px] font-medium bg-slate-100 hover:bg-sky-50 text-slate-700 rounded-lg transition-colors">Cold / Flu</button>
+          <button onClick={() => applyPreset(['excessive_thirst', 'frequent_urination', 'fatigue'])} className="px-3 py-1.5 text-[11px] font-medium bg-slate-100 hover:bg-sky-50 text-slate-700 rounded-lg transition-colors">Diabetes Check</button>
+          <button onClick={() => applyPreset(['chest_tightness', 'shortness_breath', 'dizziness'])} className="px-3 py-1.5 text-[11px] font-medium bg-slate-100 hover:bg-sky-50 text-slate-700 rounded-lg transition-colors">Heart & Breathing</button>
+          <button onClick={() => applyPreset(['swelling_legs', 'foamy_urine', 'fatigue'])} className="px-3 py-1.5 text-[11px] font-medium bg-slate-100 hover:bg-sky-50 text-slate-700 rounded-lg transition-colors">Kidney Check</button>
         </div>
 
         {/* Search Input for other symptoms */}
@@ -596,8 +624,14 @@ export const SimpleHealthCheck: React.FC<SimpleHealthCheckProps> = ({
           })}
         </div>
 
-        {/* Save to History Button */}
-        <div className="pt-4 border-t border-slate-100 flex justify-end">
+        {/* Action Buttons */}
+        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-2">
+          <button
+            onClick={() => window.print()}
+            className="w-full sm:w-auto px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2"
+          >
+            <span>🖨️ Print Report</span>
+          </button>
           <button
             onClick={() => onSaveCheckIn(Object.values(selectedSymptoms))}
             className="w-full sm:w-auto px-6 py-2.5 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2"
@@ -605,6 +639,24 @@ export const SimpleHealthCheck: React.FC<SimpleHealthCheckProps> = ({
             <BookmarkPlus className="w-4 h-4" />
             <span>Save This Check-in to History</span>
           </button>
+        </div>
+
+        {/* Printable Report (hidden on screen) */}
+        <div className="print-report hidden print:block mt-6 border border-slate-200 rounded-xl p-6 bg-white">
+          <h1 className="text-lg font-bold text-slate-900 mb-2">Symptom Check Report</h1>
+          <p className="text-xs text-slate-500 mb-4">Patient: {patient.name} · Age {patient.age} · BMI {patient.bmi.toFixed(1)}</p>
+          <h2 className="text-sm font-semibold text-slate-800 mb-1">Reported Symptoms</h2>
+          <ul className="text-xs text-slate-700 mb-4 list-disc list-inside">
+            {Object.values(selectedSymptoms).map((s) => (
+              <li key={s.symptomId}>{s.name} — {s.durationLabel}, {s.severityLabel}</li>
+            ))}
+          </ul>
+          <h2 className="text-sm font-semibold text-slate-800 mb-1">Top Predictions</h2>
+          <ul className="text-xs text-slate-700 space-y-1">
+            {diseaseProbabilities.slice(0, 5).map((d) => (
+              <li key={d.diseaseId}>{d.diseaseName}: {d.probability}% ({d.riskLevel})</li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { Header } from './components/Header';
 import { PatientProfileForm } from './components/PatientProfileForm';
 import { SimpleHealthCheck } from './components/SimpleHealthCheck';
 import { SimpleHistoryList } from './components/SimpleHistoryList';
+import { HealthDashboard } from './components/HealthDashboard';
 import { SplashScreen } from './components/SplashScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { PatientProfile, HealthCheckRecord, ReportedSymptom, AppUser } from './types/medical';
@@ -108,7 +109,7 @@ export default function App() {
   });
 
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<'check_symptoms' | 'history'>('check_symptoms');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'check_symptoms' | 'history'>('dashboard');
 
   // Modal / Screen to add or edit patient
   const [isAddingNewPatient, setIsAddingNewPatient] = useState(false);
@@ -379,6 +380,14 @@ export default function App() {
         ) : (
           /* Scenario 3: Standard active user experience */
           <>
+            {activeTab === 'dashboard' && currentPatient && (
+              <HealthDashboard
+                patient={currentPatient}
+                records={patientHistoryRecords}
+                onNewCheckIn={() => setActiveTab('check_symptoms')}
+              />
+            )}
+
             {activeTab === 'check_symptoms' && currentPatient && (
               <SimpleHealthCheck
                 patient={currentPatient}
