@@ -1,0 +1,7 @@
+{
+  "name": "Symptoms Based Disease Detection System",
+  "description": "Patient health risk analysis, symptom tracking, and disease probability detection system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

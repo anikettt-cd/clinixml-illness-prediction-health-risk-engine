@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny all unexpected paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Profile Validation
+    function isValidUserProfile(data, uid) {
+      return data.keys().hasAll(['id', 'email', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'email', 'displayName', 'photoURL', 'createdAt']) &&
+        data.id == uid &&
+        data.email is string && data.email.size() <= 256 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+        (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 1000)) &&
+        data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Patient Profile Validation
+    function isValidPatient(data, uid) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'age', 'gender', 'weightKg', 'heightCm', 'bmi', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'userId', 'name', 'age', 'gender', 'weightKg', 'heightCm', 'bmi', 'isSmoker', 'hasDiabetesHistory', 'hasHeartHistory', 'hasHighBpHistory', 'medicationsSummary', 'createdAt']) &&
+        data.userId == uid &&
+        isValidId(data.id) &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.age is number && data.age >= 0 && data.age <= 130 &&
+        data.gender in ['male', 'female', 'other'] &&
+        data.weightKg is number && data.weightKg >= 1 && data.weightKg <= 500 &&
+        data.heightCm is number && data.heightCm >= 30 && data.heightCm <= 300 &&
+        data.bmi is number &&
+        (!('isSmoker' in data) || data.isSmoker is bool) &&
+        (!('hasDiabetesHistory' in data) || data.hasDiabetesHistory is bool) &&
+        (!('hasHeartHistory' in data) || data.hasHeartHistory is bool) &&
+        (!('hasHighBpHistory' in data) || data.hasHighBpHistory is bool) &&
+        (!('medicationsSummary' in data) || (data.medicationsSummary is string && data.medicationsSummary.size() <= 1000)) &&
+        data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Health Check Record Validation
+    function isValidRecord(data, uid) {
+      return data.keys().hasAll(['id', 'userId', 'patientId', 'timestamp', 'formattedDate', 'reportedSymptoms', 'predictions', 'topDisease']) &&
+        data.keys().hasOnly(['id', 'userId', 'patientId', 'timestamp', 'formattedDate', 'reportedSymptoms', 'predictions', 'topDisease', 'notes']) &&
+        data.userId == uid &&
+        isValidId(data.id) &&
+        isValidId(data.patientId) &&
+        data.timestamp is string && data.timestamp.size() <= 64 &&
+        data.formattedDate is string && data.formattedDate.size() <= 100 &&
+        data.reportedSymptoms is list && data.reportedSymptoms.size() <= 50 &&
+        data.predictions is list && data.predictions.size() <= 50 &&
+        data.topDisease is map &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000));
+    }
+
+    // Root Users Collection
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Blanket listing forbidden to protect PII
+      allow create: if isOwner(userId) && isValidUserProfile(incoming(), userId);
+      allow update: if isOwner(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt;
+      allow delete: if isOwner(userId);
+
+      // Subcollection: Patients
+      match /patients/{patientId} {
+        allow get: if isOwner(userId) && isValidId(patientId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+          isValidId(patientId) &&
+          incoming().id == patientId &&
+          isValidPatient(incoming(), userId);
+        allow update: if isOwner(userId) &&
+          isValidId(patientId) &&
+          isValidPatient(incoming(), userId) &&
+          incoming().id == existing().id &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt;
+        allow delete: if isOwner(userId) && isValidId(patientId);
+      }
+
+      // Subcollection: Health Check Records
+      match /records/{recordId} {
+        allow get: if isOwner(userId) && isValidId(recordId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+          isValidId(recordId) &&
+          incoming().id == recordId &&
+          isValidRecord(incoming(), userId);
+        allow update: if isOwner(userId) &&
+          isValidId(recordId) &&
+          isValidRecord(incoming(), userId) &&
+          incoming().id == existing().id &&
+          incoming().userId == existing().userId &&
+          incoming().patientId == existing().patientId &&
+          incoming().timestamp == existing().timestamp;
+        allow delete: if isOwner(userId) && isValidId(recordId);
+      }
+    }
+  }
+}

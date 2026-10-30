@@ -1,0 +1,169 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile for authenticated users",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name",
+          "maxLength": 100
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "User avatar URL",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of account creation"
+        }
+      },
+      "required": ["id", "email", "createdAt"]
+    },
+    "PatientProfile": {
+      "title": "PatientProfile",
+      "description": "Patient health profile for symptom checks",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique patient ID",
+          "maxLength": 64
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "description": "Patient full or preferred name",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "age": {
+          "type": "number",
+          "description": "Patient age in years"
+        },
+        "gender": {
+          "type": "string",
+          "description": "Biological sex / gender category",
+          "enum": ["male", "female", "other"]
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "Weight in kilograms"
+        },
+        "heightCm": {
+          "type": "number",
+          "description": "Height in centimeters"
+        },
+        "bmi": {
+          "type": "number",
+          "description": "Body Mass Index"
+        },
+        "isSmoker": {
+          "type": "boolean",
+          "description": "Tobacco / smoking history"
+        },
+        "hasDiabetesHistory": {
+          "type": "boolean",
+          "description": "History of diabetes"
+        },
+        "hasHeartHistory": {
+          "type": "boolean",
+          "description": "History of cardiovascular issues"
+        },
+        "hasHighBpHistory": {
+          "type": "boolean",
+          "description": "History of hypertension"
+        },
+        "medicationsSummary": {
+          "type": "string",
+          "description": "Optional notes on ongoing medications",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of profile creation"
+        }
+      },
+      "required": ["id", "userId", "name", "age", "gender", "weightKg", "heightCm", "bmi", "createdAt"]
+    },
+    "HealthCheckRecord": {
+      "title": "HealthCheckRecord",
+      "description": "A recorded symptom assessment session and predicted disease probabilities",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique check-in record ID",
+          "maxLength": 64
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID",
+          "maxLength": 128
+        },
+        "patientId": {
+          "type": "string",
+          "description": "Associated patient profile ID",
+          "maxLength": 64
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp of check-in"
+        },
+        "formattedDate": {
+          "type": "string",
+          "description": "Human readable date label",
+          "maxLength": 100
+        },
+        "reportedSymptoms": {
+          "type": "array",
+          "description": "List of reported symptoms with duration and severity"
+        },
+        "predictions": {
+          "type": "array",
+          "description": "Ranked predicted diseases with calculated probabilities"
+        },
+        "topDisease": {
+          "type": "object",
+          "description": "Primary predicted condition"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional patient notes",
+          "maxLength": 2000
+        }
+      },
+      "required": ["id", "userId", "patientId", "timestamp", "formattedDate", "reportedSymptoms", "predictions", "topDisease"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User private profile document"
+    },
+    "/users/{userId}/patients/{patientId}": {
+      "schema": "PatientProfile",
+      "description": "Patients created and managed by the authenticated user"
+    },
+    "/users/{userId}/records/{recordId}": {
+      "schema": "HealthCheckRecord",
+      "description": "Historical health check-in assessments performed by the user"
+    }
+  }
+}
