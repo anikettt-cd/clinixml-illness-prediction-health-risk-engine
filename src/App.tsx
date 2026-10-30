@@ -362,10 +362,17 @@ export default function App() {
       {/* Simple Header */}
       <Header
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+            setIsEditingCurrentPatient(false);
+            setIsAddingNewPatient(false);
+            setActiveTab(tab);
+          }}
         patients={patients}
         currentPatientId={currentPatient?.id || ''}
-        onSelectPatient={setCurrentPatientId}
+        onSelectPatient={(id) => {
+            setIsEditingCurrentPatient(false);
+            setCurrentPatientId(id);
+          }}
         onAddNewPatient={() => setIsAddingNewPatient(true)}
         onShowSplash={() => setShowSplash(true)}
         user={user}
@@ -401,6 +408,7 @@ export default function App() {
               onSavePatient={handleUpdatePatient}
               onCancel={() => setIsEditingCurrentPatient(false)}
               isInitialSetup={false}
+              patient={currentPatient}
             />
           </div>
         ) : (

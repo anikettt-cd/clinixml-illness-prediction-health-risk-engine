@@ -12,23 +12,25 @@ interface PatientProfileFormProps {
   onSavePatient: (patient: PatientProfile) => void;
   onCancel?: () => void;
   isInitialSetup?: boolean;
+  patient?: PatientProfile;
 }
 
 export const PatientProfileForm: React.FC<PatientProfileFormProps> = ({
   onSavePatient,
   onCancel,
   isInitialSetup = false,
+  patient,
 }) => {
-  const [name, setName] = useState('');
-  const [age, setAge] = useState(30);
-  const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
-  const [weightKg, setWeightKg] = useState(68);
-  const [heightCm, setHeightCm] = useState(172);
-  const [isSmoker, setIsSmoker] = useState(false);
-  const [hasDiabetes, setHasDiabetes] = useState(false);
-  const [hasHeart, setHasHeart] = useState(false);
-  const [hasHighBp, setHasHighBp] = useState(false);
-  const [medications, setMedications] = useState('');
+const [name, setName] = useState(patient?.name || '');
+  const [age, setAge] = useState(patient?.age ?? 30);
+  const [gender, setGender] = useState<'male' | 'female' | 'other'>(patient?.gender || 'male');
+  const [weightKg, setWeightKg] = useState(patient?.weightKg ?? 68);
+  const [heightCm, setHeightCm] = useState(patient?.heightCm ?? 172);
+  const [isSmoker, setIsSmoker] = useState(patient?.isSmoker ?? false);
+  const [hasDiabetes, setHasDiabetes] = useState(patient?.hasDiabetesHistory ?? false);
+  const [hasHeart, setHasHeart] = useState(patient?.hasHeartHistory ?? false);
+  const [hasHighBp, setHasHighBp] = useState(patient?.hasHighBpHistory ?? false);
+  const [medications, setMedications] = useState(patient?.medicationsSummary || '');
 
   // Calculate BMI dynamically
   const heightM = heightCm / 100;
@@ -48,7 +50,7 @@ export const PatientProfileForm: React.FC<PatientProfileFormProps> = ({
     if (!name.trim()) return;
 
     const newPatient: PatientProfile = {
-      id: `pat_${Date.now()}`,
+      id: patient?.id || `pat_${Date.now()}`,
       name: name.trim(),
       age: Number(age) || 30,
       gender,
@@ -60,7 +62,7 @@ export const PatientProfileForm: React.FC<PatientProfileFormProps> = ({
       hasHeartHistory: hasHeart,
       hasHighBpHistory: hasHighBp,
       medicationsSummary: medications.trim() || undefined,
-      createdAt: new Date().toISOString(),
+      createdAt: patient?.createdAt || new Date().toISOString(),
     };
 
     onSavePatient(newPatient);
